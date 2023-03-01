@@ -380,23 +380,27 @@ object DownloadUtil {
         downloadPath: String,
         sdcardUri: String
     ): Result<List<String>> = preferences.run {
-        if (privateMode) {
-            Result.success(emptyList())
-        } else if (sdcard) {
-            Result.success(
-                moveFilesToSdcard(
-                    sdcardUri = sdcardUri,
-                    tempPath = context.getSdcardTempDir(videoInfo.id)
-                ).apply {
-                    insertInfoIntoDownloadHistory(videoInfo, this)
-                })
+        if (sdcard) {
+            moveFilesToSdcard(
+                sdcardUri = sdcardUri, tempPath = context.getSdcardTempDir(videoInfo.id)
+            ).run {
+                if (privateMode) {
+                    Result.success(emptyList())
+                } else this.apply {
+                    getOrNull()?.let { insertInfoIntoDownloadHistory(videoInfo, it) }
+                }
+            }
         } else {
-            Result.success(
-                scanVideoIntoDownloadHistory(
-                    videoInfo = videoInfo,
-                    downloadPath = downloadPath,
+            if (privateMode) {
+                Result.success(emptyList())
+            } else {
+                Result.success(
+                    scanVideoIntoDownloadHistory(
+                        videoInfo = videoInfo,
+                        downloadPath = downloadPath,
+                    )
                 )
-            )
+            }
         }
     }
 
