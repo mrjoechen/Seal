@@ -1,6 +1,8 @@
 package com.junkfood.seal.ui.page.command
 
 import android.util.Log
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -28,8 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -120,18 +120,27 @@ fun TaskLogPage(onBackPressed: () -> Unit, taskHashCode: Int) {
         LaunchedEffect(key1 = scrollState.maxValue) {
             scrollState.animateScrollTo(scrollState.maxValue)
         }
+        var scale by remember { mutableStateOf(1f) }
+        val style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)
+        var textStyle by remember { mutableStateOf(style) }
+        val state = rememberTransformableState { zoomChange, _, _ ->
+            scale *= zoomChange
+            textStyle =
+                style.copy(fontSize = style.fontSize * scale, lineHeight = style.lineHeight * scale)
+        }
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddings)
+                .transformable(state)
                 .padding(horizontal = 24.dp)
                 .verticalScroll(scrollState)
-                .horizontalScroll(rememberScrollState())
         ) {
             SelectionContainer() {
                 Text(
-                    modifier = Modifier.widthIn(max = 800.dp),
+                    modifier = Modifier,
                     text = task.output,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)
+                    style = textStyle
                 )
             }
         }
